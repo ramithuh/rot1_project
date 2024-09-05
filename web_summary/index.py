@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 # Start streamlit app
-st.sidebar.title('SELEX Data Explorer')
+st.sidebar.title('SELEX Data Overview/Explorer')
 st.markdown(
     """
     <style>
@@ -28,9 +28,10 @@ with st.sidebar.expander("File structure:", expanded=True):
     st.write(f"**Rounds 1-4 File Count:** {len(file_names)} *(eg. Alx4_ESP_TGGTAG20NCG_1.txt.gz)*")
     st.write(f"**ZeroCycle Count:** {len(gz_files) - len(file_names)} *(eg. ZeroCycle_ES0_TGGTAG20NCG_0.txt.gz)*")
 
-    code = '''$ find . -name "*.gz" | grep -v "ZeroCycle" | wc -l 
-2069
-$ find . -name "*.gz" | grep "ZeroCycle" | wc -l
+    code1 = '''$ find . -name "*.gz" | grep -v "ZeroCycle" | wc -l 
+2069'''
+    code2 = '''$ find . -name "*.gz" | grep "ZeroCycle" | wc -l
 441'''
-    st.code(code, language="bash")
+    st.code(code1, language="bash")
+    st.code(code2, language="bash")
 
