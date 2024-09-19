@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 # Start streamlit app
 st.sidebar.title('SELEX Data Overview/Explorer')
@@ -35,3 +36,36 @@ with st.sidebar.expander("File structure:", expanded=True):
     st.code(code1, language="bash")
     st.code(code2, language="bash")
 
+
+# Generate dummy data for 450 proteins
+np.random.seed(42)
+num_proteins = 10
+protein_names = [f'Protein_{i+1}' for i in range(num_proteins)]
+count_series = np.arange(1, num_proteins + 1) + 5 # Total count
+unique_count_series = np.arange(1, num_proteins + 1)  # Total count
+
+dummy_data = pd.DataFrame({
+    'Protein': protein_names,
+    'Total Count': count_series,
+    'Unique Count': unique_count_series
+})
+
+# Sort the data by Binding Frequency in decreasing order
+sorted_data = dummy_data.sort_values(by='Total Count', ascending=False)
+
+fig = px.bar(sorted_data, x='Protein', y=['Total Count', 'Unique Count'],
+             title='Distribution of Binding Frequencies by Protein (Counts)',
+             labels={'value': 'Count', 'variable': 'Count Type', 'Protein': 'Protein'},
+             height=600)
+
+fig.update_layout(
+    xaxis_title="Protein",
+    yaxis_title="Count",
+    xaxis_tickangle=-90,
+    bargap=0.2
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+st.write("Sorted Protein Binding Frequencies:")
+st.dataframe(sorted_data)
