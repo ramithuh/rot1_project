@@ -4,6 +4,10 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 
+#import package
+import plotly.io as pio
+pio.templates.default = "plotly"
+
 # Start streamlit app
 st.sidebar.title('SELEX Data Overview/Explorer')
 st.markdown(
@@ -33,31 +37,53 @@ with st.sidebar.expander("File structure:", expanded=True):
 2069'''
     code2 = '''$ find . -name "*.gz" | grep "ZeroCycle" | wc -l
 441'''
+    code3 = '''total_lines=0; for file in "T"_*4.txt.gz; do [ -f "$file" ] && echo $file && lines=$(zcat "$file" | wc -l) && total_lines=$((total_lines + lines)); done; echo "Total DNA Fragments: $((total_lines / 4))"
+T_ESW_TGGGCG20NCGT_4.txt.gz
+Total DNA Fragments: 2103222'''
     st.code(code1, language="bash")
     st.code(code2, language="bash")
+    st.write(f"Get total DNA count for specified protein in round 4 (e.g. T)")
+    st.code(code3, language="bash")
 
 
-# Generate dummy data for 450 proteins
-np.random.seed(42)
-num_proteins = 10
-protein_names = [f'Protein_{i+1}' for i in range(num_proteins)]
-count_series = np.arange(1, num_proteins + 1) + 5 # Total count
-unique_count_series = np.arange(1, num_proteins + 1)  # Total count
 
-dummy_data = pd.DataFrame({
-    'Protein': protein_names,
-    'Total Count': count_series,
-    'Unique Count': unique_count_series
-})
+## Plot data 
 
-# Sort the data by Binding Frequency in decreasing order
-sorted_data = dummy_data.sort_values(by='Total Count', ascending=False)
+# Read the CSV file
+df = pd.read_csv('summary.csv')
 
-fig = px.bar(sorted_data, x='Protein', y=['Total Count', 'Unique Count'],
-             title='Distribution of Binding Frequencies by Protein (Counts)',
-             labels={'value': 'Count', 'variable': 'Count Type', 'Protein': 'Protein'},
-             height=600)
+# Get all numeric columns
+numeric_columns = ['all_count', 'valid_count', 'total_unique_count', 'intersection_count']
 
+# Create a dropdown to select the sorting column
+sort_column = st.selectbox(
+    "Sort proteins by:",
+    options=numeric_columns + ['protein_id'],
+    index=0
+)
+
+# Create a multi-select to choose which columns to display
+display_columns = st.multiselect(
+    "Select columns to display:",
+    options=numeric_columns,
+    default=numeric_columns[:2]  # Default to first two numeric columns
+)
+
+# Sort the data
+sorted_data = df.sort_values(by=sort_column, ascending=False)
+
+# Create the bar chart
+fig = px.bar(
+    sorted_data, 
+    x='protein_id', 
+    y=display_columns,
+    title='Distribution of Protein Data',
+    labels={'value': 'Count', 'variable': 'Data Type', 'protein_id': 'Protein'},
+    height=600,
+    barmode='group'  # Change this from 'stack' to 'group'
+)
+
+# Update layout
 fig.update_layout(
     xaxis_title="Protein",
     yaxis_title="Count",
@@ -65,7 +91,12 @@ fig.update_layout(
     bargap=0.2
 )
 
+# Display the chart
 st.plotly_chart(fig, use_container_width=True)
 
-st.write("Sorted Protein Binding Frequencies:")
+# Display the sorted data
+st.write("Sorted Protein Data:")
 st.dataframe(sorted_data)
+
+# Save the figure as an HTML file
+fig.write_html("protein_data_visualization.html")
